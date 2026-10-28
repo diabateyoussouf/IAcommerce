@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/products")
 // eviter cross token
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "${app.frontend.url}")
 public class ProductRestController {
     @Autowired
     private final ProductService productService;

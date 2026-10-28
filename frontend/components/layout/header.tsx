@@ -4,29 +4,30 @@ import LaptopMenu from "./laptop-menu"
 import axios from "axios"
 import { API_BASE_URL } from '@/lib/utils';
 
-console.log("API_BASE_URL", API_BASE_URL)
+export default async function Header() {
+  let categories: any[] = [];
 
-export default  async function Header () {
-  let categories
-  try{
-     categories = await axios.get(`${API_BASE_URL}/api/categories/images`).then(res => res.data);
-    
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/categories/images`);
+    const data = response.data;
+
+    // Extraction sécurisée selon le format renvoyé par Spring Boot
+    if (Array.isArray(data)) {
+      categories = data;
+    } else if (data && Array.isArray(data.content)) {
+      categories = data.content;
+    }
+  } catch (e) {
+    categories = [];
   }
-  catch(e){
-    // console.log(e)
-    categories=[]
-  }
- 
 
   return (
-    <header className="border-b  px-4z md:px-6 sticky top-2 rounded-md z-30  bg-background ">
+    <header className="border-b px-4 md:px-6 sticky top-2 rounded-md z-30 bg-background">
       <div className="flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <MobileMenu />
-          {/* Logo & Desktop Nav */}
-          <LaptopMenu  categories={categories} />
+          <LaptopMenu categories={categories} />
         </div>
-        {/* Right: Actions */}
         <RightActions />
       </div>
     </header>

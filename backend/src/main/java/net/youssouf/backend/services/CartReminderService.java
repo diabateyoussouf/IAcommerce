@@ -7,6 +7,7 @@ import net.youssouf.backend.repositories.CartRepository;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value; // <-- IMPORT À AJOUTER
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +18,9 @@ public class CartReminderService {
     private final CartRepository cartRepository;
     private final EmailService emailService;
     private final ChatClient chatClient;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     public CartReminderService(CartRepository cartRepository, EmailService emailService, ChatClient.Builder chatClientBuilder) {
         this.cartRepository = cartRepository;
@@ -36,7 +40,7 @@ public class CartReminderService {
 
             String recipientEmail = cart.getUser().getEmail();
             String sessionId = cart.getSessionId();
-            String link = "http://localhost:3000/test-panier?sessionId=" + sessionId;
+            String link = frontendUrl + "/test-panier?sessionId=" + sessionId;
 
             try {
                 //  Générer le prompt avec les produits

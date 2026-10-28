@@ -1,8 +1,8 @@
-
 import type { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin';
 
-
+// Récupère l'URL du backend depuis .env.local (avec fallback local sur port 8005)
+const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL ;
 
 // Base CSP directives
 const ContentSecurityPolicy = {
@@ -13,28 +13,23 @@ const ContentSecurityPolicy = {
   ],
   "object-src": "'none'",
   "style-src": "'self' 'unsafe-inline'", 
-  "img-src": "'self' data: https:", 
+  "img-src": "'self' data: blob: https: http:", 
   "font-src": "'self' https:",
-  "connect-src": "'self' http://localhost:8080",
+  "connect-src": `'self' ${apiUrl}`,
   "frame-ancestors": "'none'",
 };
-
 
 if (process.env.NODE_ENV === 'development') {
   ContentSecurityPolicy['script-src'].push("'unsafe-eval'");
 }
 
-
 const cspValue = Object.entries(ContentSecurityPolicy)
   .map(([key, value]) => `${key} ${Array.isArray(value) ? value.join(' ') : value}`)
   .join('; ');
 
-
-
 const securityHeaders = [
   {
     key: 'Content-Security-Policy',
-    // Use the dynamically generated CSP value
     value: cspValue,
   },
   {
@@ -57,12 +52,6 @@ const securityHeaders = [
     key: 'Permissions-Policy',
     value: 'geolocation=(), microphone=(), camera=()',
   },
-  // These COOP/COEP headers can cause issues with some third-party services (e.g., Google Auth).
-  // Keep them if you need them, but be aware they can be restrictive.
-  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-  { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
-  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
-
 ];
 
 const nextConfig: NextConfig = {
@@ -72,25 +61,22 @@ const nextConfig: NextConfig = {
     },
   },
 
-  
   productionBrowserSourceMaps: true,
 
   images: {
+    unoptimized: true, // Contourne le proxy serveur pour éviter les erreurs 400/500 sur les images externes
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
-      { protocol: 'https', hostname: 'resource.logitech.com' },
-      { protocol: 'https', hostname: 'cdn.shopify.com' },
-      { protocol: 'https', hostname: 'images.pexels.com' },
-      // The wildcard hostname is very permissive. Consider restricting it if possible.
-      { protocol: 'https', hostname: '*.google.com' }, // Example of a more specific wildcard
-      { protocol: 'https', hostname: 'res.cloudinary.com' }, // Example
-      { protocol: 'https', hostname: '*', },
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: '**' },
     ],
   },
 
   async headers() {
     return [
       {
-        source: '/:path*', // Apply to all routes
+        source: '/:path*',
         headers: securityHeaders,
       },
     ];
